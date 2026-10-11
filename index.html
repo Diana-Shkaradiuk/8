@@ -1,0 +1,1066 @@
+<!doctype html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Рух без меж</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Onest:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: сцена займає весь екран (базова ширина ≥1600 умовних px, масштаб під вікно); мотив — тактильна плитка та знаки доступності.
+   Одна навмисна тема для проєктора, всі кольори задані явно. */
+:root{
+  --paper:#EDF0EE;
+  --card:#FFFFFF;
+  --ink:#0F1B2D;
+  --muted:#5A6577;
+  --line:#CDD5D8;
+  --blue:#1E4DD8;
+  --blue-deep:#16349A;
+  --blue-soft:#DCE5FB;
+  --tactile:#F2BF1A;
+  --tactile-soft:#FBEFC2;
+  --good:#1E8457;
+  --bad:#C4442E;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"Onest","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);overflow:hidden;-webkit-font-smoothing:antialiased}
+#viewport{position:fixed;inset:0;overflow:hidden;background:var(--paper)}
+#stage{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:0 0;background:var(--paper);overflow:hidden}
+
+/* ---------- slides ---------- */
+.slide{position:absolute;inset:0;padding:68px 100px 84px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(70px);transition:opacity .55s ease,transform .7s cubic-bezier(.2,.8,.2,1),visibility 0s linear .7s;background:var(--paper)}
+.slide.past{transform:translateX(-70px)}
+.slide.active{opacity:1;visibility:visible;transform:none;transition:opacity .55s ease,transform .7s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.slide.dark{background:var(--blue-deep);color:#fff}
+.a{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .7s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--i,0) * 90ms + 150ms)}
+.slide.active .a{opacity:1;transform:none}
+
+.kicker{font-family:var(--f-mono);font-size:18px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);display:flex;align-items:center;gap:14px;margin:0 0 16px}
+.kicker::before{content:"";width:34px;height:12px;background:radial-gradient(circle,var(--tactile) 3px,transparent 3.5px) 0 0/11.5px 12px}
+.dark .kicker{color:var(--tactile)}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:52px;line-height:1.08;font-weight:600;max-width:1350px}
+h3{font-size:24px;font-weight:600;line-height:1.2}
+p{margin:0}
+.lead{font-size:26px;line-height:1.45;color:var(--muted);max-width:1100px}
+.dark .lead{color:#C9D5F7}
+.body{flex:1;min-height:0;display:flex;gap:44px;margin-top:40px}
+.col{display:flex;flex-direction:column;gap:22px;min-width:0}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.card{background:var(--card);border-radius:6px;padding:26px 28px;border:1px solid var(--line)}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:15px;letter-spacing:.06em;text-transform:uppercase;padding:6px 11px;border-radius:3px;background:var(--blue-soft);color:var(--blue-deep);align-self:flex-start}
+.tag.y{background:var(--tactile-soft);color:#6E5200}
+.small{font-size:19px;color:var(--muted);line-height:1.45}
+.txt{font-size:22px;line-height:1.45}
+.big{font-family:var(--f-display);font-weight:800;letter-spacing:-.02em;line-height:1;white-space:nowrap}
+.unit{font-family:var(--f-body);font-weight:500;font-size:.4em;letter-spacing:0;margin-left:6px;color:var(--muted)}
+ul.clean{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+ul.clean li{font-size:22px;line-height:1.4;padding-left:30px;position:relative}
+ul.clean li::before{content:"";position:absolute;left:0;top:.48em;width:13px;height:13px;border-radius:50%;background:var(--tactile);box-shadow:0 0 0 3px var(--tactile-soft)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--tactile);outline-offset:2px}
+
+.foot{position:absolute;left:100px;right:100px;bottom:32px;display:flex;justify-content:space-between;align-items:center;font-family:var(--f-mono);font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.foot .brand{display:flex;align-items:center;gap:10px;font-weight:500}
+.foot .brand i{width:22px;height:22px;border-radius:50%;background:var(--blue);display:inline-block;position:relative}
+.foot .brand i::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--tactile)}
+
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:var(--card);padding:11px 20px;border-radius:40px;font-size:19px;font-weight:500;transition:.2s}
+.chip:hover{border-color:var(--blue)}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.pane[hidden]{display:none!important}
+
+/* tiles */
+.kpis{display:grid;gap:18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:26px 28px;display:flex;flex-direction:column;gap:12px}
+.kpi .big{font-size:52px;color:var(--ink)}
+.kpi .lbl{font-size:19px;color:var(--muted);line-height:1.35}
+.kpi.hl{background:var(--blue);border-color:var(--blue);color:#fff}
+.kpi.hl .big{color:#fff}.kpi.hl .lbl,.kpi.hl .unit{color:#D5E0FF}
+
+/* ---------- COVER ---------- */
+.cover canvas{position:absolute;inset:0;width:100%;height:100%}
+.cover .inner{position:relative;display:flex;flex-direction:column;height:100%}
+.cover .foot{display:none}
+.uni{font-family:var(--f-mono);font-size:19px;letter-spacing:.12em;text-transform:uppercase;color:#C9D5F7;line-height:1.6}
+.title-main{margin-top:auto}
+.title-main .disc{font-size:25px;color:var(--tactile);margin-bottom:22px;font-weight:500}
+.title-main h1{font-size:112px;font-weight:800;line-height:.98;letter-spacing:-.03em}
+.title-main .sub{font-size:34px;margin-top:28px;max-width:1000px;line-height:1.3;color:#E4EAFB}
+.title-main .sub b{color:var(--tactile);font-weight:600}
+.authors{margin-top:60px;display:flex;align-items:flex-end;gap:80px;position:relative;z-index:1}
+.authors .names{display:grid;grid-template-columns:repeat(4,auto);gap:8px 40px;font-size:23px}
+.authors .names span{display:block;font-family:var(--f-mono);font-size:14px;letter-spacing:.12em;color:#AFC0EE;text-transform:uppercase;grid-column:1/-1}
+.authors .city{font-family:var(--f-display);font-size:23px;color:var(--tactile);background:var(--blue-deep);padding:6px 12px}
+
+/* PROBLEM */
+.gap-row{display:grid;grid-template-columns:1fr 1.1fr 1fr;align-items:stretch;margin-top:48px}
+.gap-row .stop{background:var(--card);border:1px solid var(--line);padding:32px;border-radius:6px;display:flex;flex-direction:column;gap:16px}
+.gap-row .stop h3{font-size:28px}
+.gap-row .void{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 30px;gap:14px}
+.gap-row .void::before{content:"";position:absolute;left:0;right:0;top:50%;height:10px;transform:translateY(-50%);background:repeating-linear-gradient(90deg,var(--bad) 0 18px,transparent 18px 30px);opacity:.55}
+.gap-row .void>*{position:relative;background:var(--paper);padding:6px 14px}
+.gap-row .void .big{color:var(--bad);font-size:50px}
+.solution{margin-top:36px;background:var(--blue);color:#fff;border-radius:6px;padding:32px 38px;display:flex;gap:38px;align-items:center}
+.solution .big{font-size:34px;color:var(--tactile);flex:none}
+.solution p{font-size:25px;line-height:1.4}
+.mission{font-size:34px;line-height:1.35;font-family:var(--f-display);font-weight:400}
+.mission em{font-style:normal;background:linear-gradient(transparent 62%,var(--tactile) 62%)}
+
+/* TOC */
+.toc{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:18px;margin-top:44px;flex:1;max-height:520px}
+.toc button{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:28px;text-align:left;display:flex;flex-direction:column;gap:18px;transition:transform .2s,border-color .2s,background .2s}
+.toc button:hover{transform:translateY(-4px);border-color:var(--blue);background:var(--blue-soft)}
+.toc .n{font-family:var(--f-display);font-size:50px;font-weight:800;color:var(--blue)}
+.toc .t{font-size:23px;font-weight:600;line-height:1.3}
+
+/* legal */
+.req{display:grid;grid-template-columns:250px 1fr;font-size:22px}
+.req div{padding:13px 0;border-bottom:1px solid var(--line)}
+.req div:nth-child(odd){color:var(--muted);font-size:16px;font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.05em;padding-top:17px}
+.why{display:flex;flex-direction:column;gap:16px}
+.why .card{display:flex;gap:18px;align-items:flex-start;padding:22px 26px}
+.why .card b{font-family:var(--f-display);font-size:24px;color:var(--blue);flex:none;width:40px}
+.why .card p{font-size:21px;line-height:1.4}
+
+/* timeline */
+.founders{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.founders .card h3{font-size:25px;margin-bottom:10px}
+.founders .card .role{float:right;font-family:var(--f-mono);font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--blue)}
+.tl{position:relative;margin-top:44px;padding-top:44px}
+.tl-line,.tl-fill{position:absolute;left:0;top:61px;height:4px}
+.tl-line{right:0;background:var(--line)}
+.tl-fill{background:var(--blue);width:0;transition:width .5s}
+.tl-pts{position:relative;display:grid;grid-template-columns:repeat(8,1fr)}
+.tl-pt{background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.tl-pt i{width:24px;height:24px;border-radius:50%;background:var(--card);border:4px solid var(--line);transition:.25s}
+.tl-pt.done i{border-color:var(--blue);background:var(--blue)}
+.tl-pt.on i{background:var(--tactile);border-color:var(--blue);transform:scale(1.35)}
+.tl-pt.plan i{border-style:dashed}
+.tl-pt span{font-family:var(--f-mono);font-size:16px;color:var(--muted);line-height:1.3}
+.tl-pt.on span{color:var(--ink);font-weight:500}
+.tl-detail{margin-top:30px;min-height:104px;font-size:26px;line-height:1.4;background:var(--card);border-left:6px solid var(--tactile);padding:24px 30px;border-radius:0 6px 6px 0}
+
+/* services */
+.svc{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:44px}
+.svc .card{display:flex;flex-direction:column;gap:14px;padding:28px 24px}
+.svc .card h3{font-size:22px;min-height:54px}
+.svc .card p{font-size:18px;line-height:1.45;color:var(--muted)}
+.svc .card .price{margin-top:auto;font-family:var(--f-display);font-size:24px;color:var(--blue);font-weight:600}
+.svc .card.hl{background:var(--blue);border-color:var(--blue);color:#fff}
+.svc .card.hl p{color:#D5E0FF}.svc .card.hl .price{color:var(--tactile)}
+.svc-step{font-family:var(--f-mono);font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.svc .card.hl .svc-step{color:#D5E0FF}
+
+/* programs */
+.prog-tabs{display:flex;flex-direction:column;gap:12px;width:460px;flex:none}
+.prog-tabs button{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:20px 24px;display:flex;flex-direction:column;gap:5px;transition:.2s}
+.prog-tabs button b{font-family:var(--f-display);font-size:21px;font-weight:600}
+.prog-tabs button span{font-size:17px;color:var(--muted)}
+.prog-tabs button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.prog-tabs button.on span{color:#D5E0FF}
+.prog-panel{flex:1;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:44px 48px;display:flex;flex-direction:column;gap:30px;position:relative;overflow:hidden}
+.prog-panel .big{font-size:58px;color:var(--blue);white-space:normal}
+.prog-panel .row{display:grid;grid-template-columns:210px 1fr;gap:20px;font-size:24px;line-height:1.4;border-top:1px solid var(--line);padding-top:22px}
+.prog-panel .row span{font-family:var(--f-mono);font-size:16px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-top:5px}
+.prog-panel .dots{position:absolute;right:-40px;top:-40px;width:260px;height:260px;background:radial-gradient(circle,var(--tactile) 5px,transparent 5.5px) 0 0/26px 26px;opacity:.5;border-radius:50%}
+
+/* comparison */
+.cmp{width:100%;border-collapse:collapse;font-size:22px}
+.cmp th{font-family:var(--f-mono);font-size:16px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:12px 16px;border-bottom:2px solid var(--ink)}
+.cmp th.us{color:var(--blue)}
+.cmp td{padding:15px 16px;border-bottom:1px solid var(--line)}
+.cmp td.us{background:var(--blue-soft)}
+.rate{display:inline-flex;gap:7px}
+.rate i{width:18px;height:18px;border-radius:50%;background:var(--line)}
+.rate i.f{background:var(--blue)}
+.cmp tr.avg td{font-family:var(--f-display);font-size:34px;font-weight:600;border-bottom:0;padding-top:20px}
+.cmp tr.avg td:first-child{font-family:var(--f-body);font-size:22px}
+
+/* charts */
+svg text{font-family:var(--f-mono);fill:var(--muted)}
+svg .lbl-ink{fill:var(--ink)}
+.grow{transform-box:fill-box;transform-origin:left center;transform:scaleX(0);transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.growy{transform-box:fill-box;transform-origin:center bottom;transform:scaleY(0);transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.growy.neg{transform-origin:center top}
+.active .grow,.active .growy{transform:none}
+.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:stroke-dashoffset 1.6s ease .4s}
+.active .draw{stroke-dashoffset:0}
+
+/* market */
+.hbar{display:grid;grid-template-columns:360px 1fr 120px;gap:18px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.hbar .t{font-size:21px;line-height:1.3}
+.hbar .track{height:34px;background:var(--blue-soft);border-radius:3px;overflow:hidden}
+.hbar .track s{display:block;height:100%;background:var(--blue);text-decoration:none}
+.hbar .v{font-family:var(--f-mono);font-size:21px;font-weight:500;text-align:right}
+.stack{display:flex;flex-direction:column;gap:26px}
+.stack .sb{display:flex;height:58px;border-radius:4px;overflow:hidden}
+.stack .sb div{display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:18px;color:#fff}
+.stack .lg{display:flex;gap:10px;font-size:17px;color:var(--muted);margin-top:7px}
+.geo{display:flex;flex-direction:column;gap:18px}
+
+/* competitors */
+.comp-row{display:grid;grid-template-columns:300px 1fr 80px;gap:18px;align-items:center;padding:12px 14px;border-radius:5px;transition:background .2s;border:0;background:none;text-align:left;width:100%}
+.comp-row:hover,.comp-row.on{background:var(--card)}
+.comp-row .t{font-size:22px}
+.comp-row .track{height:30px}
+.comp-row .track s{display:block;height:100%;background:var(--line);text-decoration:none;border-radius:2px}
+.comp-row.us .track s{background:var(--blue)}
+.comp-row .v{font-family:var(--f-display);font-size:26px;font-weight:600;text-align:right}
+.comp-row.us .v{color:var(--blue)}
+
+/* SWOT */
+.swot{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:14px;flex:1.45}
+.sq{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:22px 26px;transition:.3s;display:flex;flex-direction:column;gap:12px}
+.sq h3{display:flex;align-items:center;gap:12px;font-size:21px}
+.sq h3 b{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:20px;background:var(--blue-soft);color:var(--blue-deep)}
+.sq ul{margin:0;padding-left:22px;font-size:18.5px;line-height:1.4;display:flex;flex-direction:column;gap:5px}
+.sq.lit{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue)}
+.sq.lit h3 b{background:var(--blue);color:#fff}
+.sq.fade{opacity:.35}
+.strat{flex:1;display:flex;flex-direction:column;gap:14px}
+.strat-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.strat-btns button{border:1.5px solid var(--line);background:var(--card);border-radius:6px;padding:15px;font-family:var(--f-display);font-size:23px;font-weight:600;transition:.2s}
+.strat-btns button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.strat-text{background:var(--ink);color:#fff;border-radius:6px;padding:28px 30px;flex:1}
+.strat-text h3{color:var(--tactile);margin-bottom:16px;font-size:21px}
+.strat-text ul.clean li{font-size:21px}
+
+/* funnel */
+.funnel{display:flex;flex-direction:column;gap:10px}
+.fstep{display:flex;align-items:center;gap:18px;background:var(--card);border:1px solid var(--line);border-radius:5px;padding:16px 22px;font-size:21px;margin-left:calc(var(--k) * 30px)}
+.fstep b{font-family:var(--f-mono);font-size:16px;color:#fff;background:var(--blue);border-radius:50%;width:34px;height:34px;display:grid;place-items:center;flex:none}
+
+/* research + ads */
+.res{display:flex;flex-direction:column}
+.res .r{display:grid;grid-template-columns:1fr 230px;gap:16px;padding:15px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.res .r b{font-size:21px;font-weight:600;display:block}
+.res .r span{font-size:17px;color:var(--muted)}
+.res .r em{font-style:normal;font-family:var(--f-mono);font-size:16px;color:var(--blue);text-align:right}
+.ad{display:grid;grid-template-columns:270px 1fr 60px;gap:16px;align-items:center;padding:10px 0}
+.ad span{font-size:20px}
+.ad .track{height:28px;background:var(--blue-soft);border-radius:3px;overflow:hidden}
+.ad .track s{display:block;height:100%;text-decoration:none}
+.ad b{font-family:var(--f-mono);font-size:19px;text-align:right;font-weight:500}
+.promo{display:flex;flex-wrap:wrap;gap:10px}
+.promo span{background:var(--tactile-soft);border-radius:4px;padding:9px 14px;font-size:18px;font-weight:500}
+
+/* process */
+.flow{display:grid;grid-template-columns:repeat(6,1fr);margin-top:56px}
+.fl{position:relative;padding:0 12px;display:flex;flex-direction:column;gap:16px}
+.fl .dot{width:74px;height:74px;border-radius:50%;background:var(--card);border:3px solid var(--blue);display:grid;place-items:center;font-family:var(--f-display);font-size:26px;font-weight:600;color:var(--blue);position:relative;z-index:1;transition:.3s}
+.fl::after{content:"";position:absolute;left:86px;right:-12px;top:36px;height:3px;background:var(--blue);opacity:.3}
+.fl:last-child::after{display:none}
+.fl.on .dot{background:var(--blue);color:#fff;transform:scale(1.08)}
+.fl h3{font-size:21px}
+.fl p{font-size:18px;color:var(--muted);line-height:1.4}
+.branch{display:flex;gap:8px;flex-wrap:wrap}
+.branch span{font-size:16px;background:var(--tactile-soft);padding:5px 9px;border-radius:3px}
+
+/* floor plan */
+.plan svg rect.z{cursor:pointer;transition:fill .2s,stroke .2s}
+.zone-info{background:var(--ink);color:#fff;border-radius:6px;padding:28px 30px;min-height:190px}
+.zone-info .big{font-size:52px;color:var(--tactile)}
+.zone-info h3{margin:12px 0 10px}
+.zone-info p{color:#C9D5F7;font-size:20px;line-height:1.45}
+
+/* equipment */
+.eqg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.eqg .card h3{font-size:19px;color:var(--blue);margin-bottom:12px}
+.eqg .card ul.clean li{font-size:19px}
+.power{background:var(--ink);color:#fff;border-radius:6px;padding:28px 30px;display:flex;flex-direction:column;gap:18px}
+.power .row{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid rgba(255,255,255,.15);padding-bottom:12px}
+.power .row span{color:#C9D5F7;font-size:19px}
+.power .row b{font-family:var(--f-display);font-size:30px;color:var(--tactile)}
+.batt{height:46px;border:3px solid #fff;border-radius:6px;position:relative;padding:4px;margin-right:12px}
+.batt::after{content:"";position:absolute;right:-12px;top:12px;width:7px;height:16px;background:#fff;border-radius:0 3px 3px 0}
+.batt s{display:block;height:100%;background:var(--tactile);border-radius:2px;text-decoration:none;width:0;transition:width 2s ease .5s}
+.active .batt s{width:100%}
+.sup{display:flex;flex-direction:column;gap:4px}
+.sup div{display:flex;justify-content:space-between;gap:16px;font-size:18px;border-bottom:1px solid var(--line);padding:8px 0}
+.sup div span{color:var(--muted)}
+
+/* cost structure */
+.cost-bar{display:flex;height:70px;border-radius:5px;overflow:hidden}
+.cost-bar div{display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--f-mono);font-size:18px;font-weight:500}
+.cost-lg{display:flex;flex-direction:column;gap:10px}
+.cost-lg div{display:grid;grid-template-columns:18px 1fr 70px;gap:14px;align-items:center;font-size:20px}
+.cost-lg i{width:16px;height:16px;border-radius:2px}
+.cost-lg b{font-family:var(--f-mono);text-align:right;font-weight:500}
+
+/* org */
+.org{display:flex;flex-direction:column;align-items:center;flex:1.3}
+.ob{background:var(--card);border:1.5px solid var(--ink);border-radius:5px;padding:14px 20px;text-align:center;font-size:18px;line-height:1.3}
+.ob b{display:block;font-family:var(--f-display);font-size:17px;font-weight:600}
+.ob.top{background:var(--ink);color:#fff}
+.ob.dir{background:var(--blue);color:#fff;border-color:var(--blue)}
+.ob.out{border-style:dashed;border-color:var(--muted);color:var(--muted)}
+.vl{width:2px;height:28px;background:var(--ink)}
+.orow{display:flex;gap:18px;position:relative;padding-top:28px}
+.orow::before{content:"";position:absolute;top:0;left:var(--l,10%);right:var(--r,10%);height:2px;background:var(--ink)}
+.orow>.ocol{display:flex;flex-direction:column;align-items:center;position:relative}
+.orow>.ocol::before{content:"";position:absolute;top:-28px;left:50%;width:2px;height:28px;background:var(--ink)}
+.staff{display:flex;flex-direction:column}
+.staff div{display:flex;justify-content:space-between;font-size:21px;padding:13px 0;border-bottom:1px solid var(--line)}
+.staff b{font-family:var(--f-mono);font-weight:500}
+
+/* personnel */
+.weeks{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.weeks button{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px 18px;text-align:left;transition:.2s}
+.weeks button b{font-family:var(--f-display);font-size:30px;color:var(--blue);display:block}
+.weeks button span{font-size:15px;color:var(--muted);font-family:var(--f-mono);text-transform:uppercase}
+.weeks button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.weeks button.on b,.weeks button.on span{color:#fff}
+.week-text{font-size:22px;line-height:1.45;padding:22px 26px;background:var(--card);border-left:6px solid var(--tactile);border-radius:0 6px 6px 0;min-height:120px}
+.motiv{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.motiv .card h3{font-size:19px;margin-bottom:14px;color:var(--blue)}
+.motiv ul.clean li{font-size:19px}
+
+/* finance */
+.donut-wrap{display:flex;gap:34px;align-items:center}
+.donut-list{display:flex;flex-direction:column;gap:6px;flex:1}
+.donut-list div{display:grid;grid-template-columns:16px 1fr 70px;gap:14px;align-items:center;font-size:19px;padding:7px 10px;border-radius:4px;transition:background .2s}
+.donut-list div.on{background:var(--card)}
+.donut-list i{width:15px;height:15px;border-radius:2px}
+.donut-list em{font-family:var(--f-mono);font-style:normal;text-align:right;color:var(--muted)}
+.src-bar{display:flex;height:78px;border-radius:5px;overflow:hidden}
+.src-bar div{display:flex;flex-direction:column;justify-content:center;padding:0 16px;color:#fff;font-size:17px;line-height:1.25}
+.src-bar div b{font-family:var(--f-display);font-size:24px}
+.takeaways{display:flex;flex-direction:column;gap:14px}
+.takeaways .card{padding:20px 24px;display:flex;flex-direction:column;gap:6px}
+.takeaways .card b{font-family:var(--f-mono);font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--blue)}
+.takeaways .card p{font-size:20px;line-height:1.4}
+
+/* risks */
+.risk-info{background:var(--ink);color:#fff;border-radius:6px;padding:28px 30px;display:flex;flex-direction:column;gap:14px;min-height:250px}
+.risk-info .lvl{display:inline-block;font-family:var(--f-mono);font-size:15px;text-transform:uppercase;letter-spacing:.06em;padding:6px 11px;border-radius:3px;color:var(--ink);align-self:flex-start}
+.risk-info h3{font-size:26px}
+.risk-info p{font-size:21px;line-height:1.45;color:#E4EAFB}
+.risk-list{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:17px}
+.risk-list button{background:none;border:0;text-align:left;padding:5px 7px;border-radius:3px;display:flex;gap:8px;align-items:baseline;color:var(--muted)}
+.risk-list button b{font-family:var(--f-mono);color:var(--ink);width:24px;flex:none}
+.risk-list button.on{background:var(--card);color:var(--ink)}
+
+/* insurance */
+.ins{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:44px}
+.ins .card{display:flex;flex-direction:column;gap:14px;padding:30px 26px}
+.ins .card .ic{width:58px;height:58px;border-radius:50%;background:var(--blue-soft);display:grid;place-items:center}
+.ins .card h3{font-size:22px}
+.ins .card p{font-size:18.5px;line-height:1.45;color:var(--muted)}
+
+/* conclusions */
+.concl{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:44px}
+.concl .card{display:flex;flex-direction:column;gap:14px;padding:32px}
+.concl .card h3{font-size:26px;color:var(--blue)}
+.concl .card p{font-size:21px;line-height:1.45}
+.final-line{margin-top:36px;background:var(--blue);color:#fff;border-radius:6px;padding:30px 36px;font-size:27px;line-height:1.4}
+.final-line b{color:var(--tactile)}
+#s-thanks .inner{justify-content:center;gap:30px}
+#s-thanks h1{font-size:128px;font-weight:800;letter-spacing:-.03em}
+
+/* nav: thin progress + auto-hiding arrows */
+#prog{position:fixed;left:0;bottom:0;height:4px;background:var(--tactile);width:0;transition:width .4s;z-index:5}
+#nav{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;z-index:6;opacity:0;transition:opacity .4s;pointer-events:none}
+#nav.show{opacity:1;pointer-events:auto}
+#nav button{width:48px;height:48px;border-radius:50%;border:0;background:rgba(15,27,45,.82);color:#fff;font-size:20px}
+#nav button:hover{background:var(--blue)}
+
+
+/* vertical rhythm: header pinned top, content group centred in remaining height */
+.slide:not(.cover)>h2{padding-bottom:38px}
+.slide:not(.cover)>h2+*{margin-top:auto!important}
+.slide:not(.cover)>*:nth-last-child(2){margin-bottom:auto}
+.slide:not(.cover)>.body{flex:0 1 auto}
+.slide:not(.cover)>.body.gap-top{margin-top:36px!important}
+.toc{flex:none;height:440px;max-height:none}
+@media (prefers-reduced-motion:reduce){.slide,.a,.grow,.growy,.draw,.batt s{transition:none!important}}
+</style>
+</head><body>
+
+<div id="viewport"><div id="stage">
+
+<!-- 1 TITLE -->
+<section class="slide dark cover" data-t="Титул">
+  <canvas class="dots"></canvas>
+  <div class="inner">
+    <div class="uni a" style="--i:0">Львівський національний університет імені Івана Франка<br>Кафедра менеджменту</div>
+    <div class="title-main">
+      <div class="disc a" style="--i:1">Індивідуальне навчально-дослідне завдання з дисципліни «Управління проєктами»</div>
+      <h1 class="a" style="--i:2">Бізнес-план<br>проєкту</h1>
+      <p class="sub a" style="--i:3">Створення студії адаптивного фітнесу <b>ТОВ «Рух без меж»</b></p>
+    </div>
+    <div class="authors a" style="--i:4">
+      <div class="names"><span>Виконали</span><div>Христина Трембач</div><div>Юлія Чапля</div><div>Діана Шкарадюк</div><div>Софія Яворівська</div></div>
+      <div class="city">Львів · 2026</div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 IDEA -->
+<section class="slide" data-t="Ідея">
+  <div class="kicker a">Ідея проєкту</div>
+  <h2 class="a" style="--i:1">Після реабілітації людині немає де продовжувати тренування</h2>
+  <div class="gap-row">
+    <div class="stop a" style="--i:2"><span class="tag">Реабілітаційний центр</span><h3>Коротко і дорого</h3><p class="small">Курс триває кілька тижнів, а регулярні приватні заняття більшості людей не по кишені.</p></div>
+    <div class="void a" style="--i:3"><div class="big">Розрив</div><p class="small">без регулярних навантажень досягнутий результат поступово втрачається</p></div>
+    <div class="stop a" style="--i:4"><span class="tag">Звичайний фітнес-клуб</span><h3>Не пристосований</h3><p class="small">Вузькі проходи, немає доступних душових і тренажерів для крісла колісного, тренери без підготовки.</p></div>
+  </div>
+  <div class="solution a" style="--i:5"><div class="big">Рішення</div><p>Студія регулярних тренувань, де приміщення, обладнання і персонал розраховані на людей з інвалідністю, ветеранів після поранень і людей старшого віку.</p></div>
+</section>
+
+<!-- 3 RESUME -->
+<section class="slide" data-t="Резюме">
+  <div class="kicker a">Резюме</div>
+  <h2 class="a" style="--i:1">Мета проєкту</h2>
+  <div class="body">
+    <div class="col" style="flex:1.1;justify-content:center;gap:34px">
+      <p class="mission a" style="--i:2">Створити нове підприємство, відкрити в <em>січні 2027 р.</em> студію адаптивного фітнесу в Дарницькому районі Києва та окупити інвестиції <em>протягом п'яти років</em>.</p>
+      <p class="small a" style="--i:3">Ідея виросла з практики засновників — двох фізичних терапевтів, які понад сім років працюють з ветеранами та пацієнтами після травм.</p>
+    </div>
+    <div class="kpis" style="flex:1;grid-template-columns:1fr 1fr;align-content:center">
+      <div class="kpi hl a" style="--i:2"><div class="big"><span data-count="4.18" data-dec="2">0</span><span class="unit">млн грн</span></div><div class="lbl">інвестиції в проєкт</div></div>
+      <div class="kpi a" style="--i:3"><div class="big">220<span class="unit">м²</span></div><div class="lbl">безбар'єрна студія</div></div>
+      <div class="kpi a" style="--i:4"><div class="big"><span data-count="4.1" data-dec="1">0</span><span class="unit">року</span></div><div class="lbl">термін окупності</div></div>
+      <div class="kpi a" style="--i:5"><div class="big"><span data-count="10">0</span></div><div class="lbl">нових робочих місць</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 TOC -->
+<section class="slide" data-t="Зміст">
+  <div class="kicker a">Структура роботи</div>
+  <h2 class="a" style="--i:1">Вісім розділів бізнес-плану</h2>
+  <div class="toc" id="toc"></div>
+</section>
+
+<!-- 5 LEGAL -->
+<section class="slide" data-t="Юридичний план">
+  <div class="kicker a">Розділ 1 · Юридичний план</div>
+  <h2 class="a" style="--i:1">ТОВ «Рух без меж»</h2>
+  <div class="body">
+    <div class="card a" style="--i:2;flex:1.25">
+      <div class="req">
+        <div>Форма</div><div>Товариство з обмеженою відповідальністю</div>
+        <div>Засновано</div><div>вересень 2026 р.</div>
+        <div>Адреса</div><div>м. Київ, вул. Ревуцького, 9 (юридична і фактична)</div>
+        <div>Контакти</div><div>+38 (044) 355-18-27 · info@ruhbezmezh.com.ua</div>
+        <div>Директор</div><div>Андрій Коваленко</div>
+        <div>Вид діяльності</div><div>КВЕД 93.13 — діяльність фітнес-центрів</div>
+        <div>Банк</div><div>АТ КБ «ПриватБанк»</div>
+        <div>Податки</div><div>загальна система, платник ПДВ</div>
+      </div>
+    </div>
+    <div class="why" style="flex:1">
+      <div class="card a" style="--i:3"><b>01</b><p><strong>Чому ТОВ:</strong> учасники ризикують лише своїми внесками, а банки охочіше кредитують юридичних осіб.</p></div>
+      <div class="card a" style="--i:4"><b>02</b><p><strong>Чому ПДВ:</strong> дає змогу повернути податок, сплачений за обладнання та ремонт.</p></div>
+      <div class="card a" style="--i:5"><b>03</b><p><strong>Ліцензія не потрібна:</strong> тренування не є медичною практикою.</p></div>
+      <div class="card a" style="--i:6"><b>04</b><p><strong>Приміщення в оренді</strong> на 5 років з правом продовження.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 HISTORY -->
+<section class="slide" data-t="Історична довідка">
+  <div class="kicker a">Розділ 1 · Історична довідка</div>
+  <h2 class="a" style="--i:1">Засновники та етапи становлення</h2>
+  <div class="founders a" style="--i:2;margin-top:36px">
+    <div class="card"><span class="role">Директор</span><h3>Андрій Коваленко</h3><p class="small">Магістр фізичної терапії; працював у реабвідділенні лікарні та вів програми для ветеранів з ампутаціями.</p></div>
+    <div class="card"><span class="role">Старша інструкторка</span><h3>Оксана Мельник</h3><p class="small">Фізична терапевтка: пацієнти після інсульту та люди старшого віку; сертифікат з адаптивного фітнесу.</p></div>
+  </div>
+  <div class="tl a" style="--i:3">
+    <div class="tl-line"></div><div class="tl-fill" id="tlFill"></div>
+    <div class="tl-pts" id="tlPts"></div>
+  </div>
+  <div class="tl-detail a" style="--i:4" id="tlDetail"></div>
+</section>
+
+<!-- 7 SERVICES -->
+<section class="slide" data-t="Послуги">
+  <div class="kicker a">Розділ 2 · Характеристика послуг</div>
+  <h2 class="a" style="--i:1">Що пропонує студія</h2>
+  <div class="svc">
+    <div class="card a" style="--i:2"><span class="svc-step">Старт</span><h3>Функціональна оцінка</h3><p>Тести сили, рівноваги й ходьби; на їх основі складається програма.</p><div class="price">600 грн</div></div>
+    <div class="card hl a" style="--i:3"><span class="svc-step">Основна послуга</span><h3>Індивідуальні тренування</h3><p>Заняття з інструктором; абонементи на 8 або 12 тренувань.</p><div class="price">від 800 грн</div></div>
+    <div class="card a" style="--i:4"><span class="svc-step">Доступний формат</span><h3>Групові заняття</h3><p>До 6 осіб, групи формуються за рівнем можливостей.</p><div class="price">від 250 грн</div></div>
+    <div class="card a" style="--i:5"><span class="svc-step">Вдома</span><h3>Онлайн-супровід</h3><p>Домашня програма та відеоконсультації з інструктором.</p><div class="price">1 200 грн/міс</div></div>
+    <div class="card a" style="--i:6"><span class="svc-step">Партнерам</span><h3>Програми для організацій</h3><p>Курси для ветеранських ГО та підприємств.</p><div class="price">за договором</div></div>
+  </div>
+  <p class="small a" style="--i:7;margin-top:30px">Повторна оцінка прогресу кожні 6 тижнів — безоплатно для власників абонементів.</p>
+</section>
+
+<!-- 8 PROGRAMS -->
+<section class="slide" data-t="Програми">
+  <div class="kicker a">Розділ 2 · Характеристика послуг</div>
+  <h2 class="a" style="--i:1">П'ять програм для різних груп клієнтів</h2>
+  <div class="body">
+    <div class="prog-tabs a" style="--i:2" id="progTabs"></div>
+    <div class="prog-panel a" style="--i:3" id="progPanel"></div>
+  </div>
+</section>
+
+<!-- 9 COMPARISON -->
+<section class="slide" data-t="Переваги">
+  <div class="kicker a">Розділ 2 · Чим ми відрізняємося</div>
+  <h2 class="a" style="--i:1">Фаховість реабцентру і регулярність фітнес-клубу</h2>
+  <div class="card a" style="--i:2;margin-top:40px;padding:18px 28px">
+    <table class="cmp" id="cmpTable"></table>
+  </div>
+</section>
+
+<!-- 10 MARKET -->
+<section class="slide" data-t="Ринок збуту">
+  <div class="kicker a">Розділ 3 · Аналіз ринків збуту</div>
+  <h2 class="a" style="--i:1">Ринок: лівий берег Києва</h2>
+  <div class="body">
+    <div class="col a" style="--i:2;flex:0 0 400px">
+      <div class="kpi hl"><div class="big">113,6<span class="unit">млн грн</span></div><div class="lbl">ємність ринку на рік</div></div>
+      <div class="geo">
+        <p class="txt">Дарницький, Дніпровський і Деснянський райони — близько <b>1 млн</b> жителів.</p>
+        <p class="small">Для людей з обмеженою мобільністю важлива відстань, тому ринок обмежено 30–40 хвилинами дороги до студії.</p>
+        <p class="small">Оцінку зроблено за опитуванням 140 потенційних клієнтів.</p>
+      </div>
+    </div>
+    <div class="col a" style="--i:3;flex:1">
+      <div class="chips" id="mktTabs">
+        <button class="chip on" data-p="cap">Цільові групи</button>
+        <button class="chip" data-p="str">Вік, стать, дохід</button>
+      </div>
+      <div class="pane" id="pane-cap"></div>
+      <div class="pane" id="pane-str" hidden></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 COMPETITORS -->
+<section class="slide" data-t="Конкуренти">
+  <div class="kicker a">Розділ 3 · Аналіз конкурентів</div>
+  <h2 class="a" style="--i:1">Студія випереджає всі альтернативи</h2>
+  <div class="body">
+    <div class="col a" style="--i:2;flex:1.3;gap:4px">
+      <p class="small" style="margin-bottom:8px">Оцінка методом зважених балів (з 5): доступність, кваліфікація, ціна, регулярність, обладнання, розташування</p>
+      <div id="compRows"></div>
+    </div>
+    <div class="col" style="flex:1;justify-content:center">
+      <div class="card a" style="--i:3;min-height:220px" id="compNote"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 SWOT -->
+<section class="slide" data-t="SWOT-аналіз">
+  <div class="kicker a">Розділ 3 · SWOT-аналіз</div>
+  <h2 class="a" style="--i:1">SWOT-аналіз і стратегії</h2>
+  <div class="body" style="margin-top:30px">
+    <div class="swot a" style="--i:2">
+      <div class="sq" data-q="S"><h3><b>S</b>Сильні сторони</h3><ul><li>Досвід засновників у фізичній терапії</li><li>Зв'язки з лікарнями та ветеранськими ГО</li><li>Кваліфіковані інструктори</li><li>Безбар'єрне приміщення, резервне живлення</li></ul></div>
+      <div class="sq" data-q="W"><h3><b>W</b>Слабкі сторони</h3><ul><li>Нове підприємство без впізнаваності</li><li>Високі постійні витрати</li><li>Залежність від кредиту</li><li>Обмежена місткість однієї студії</li></ul></div>
+      <div class="sq" data-q="O"><h3><b>O</b>Можливості</h3><ul><li>Зростання кількості людей, яким потрібні заняття</li><li>Державні та грантові програми для ветеранів</li><li>Партнерство з протезистами й лікарнями</li><li>Попит на онлайн-супровід</li></ul></div>
+      <div class="sq" data-q="T"><h3><b>T</b>Загрози</h3><ul><li>Безпекова ситуація, відключення світла</li><li>Зниження платоспроможності</li><li>Прихід великих мереж</li><li>Дефіцит кваліфікованих кадрів</li></ul></div>
+    </div>
+    <div class="strat a" style="--i:3">
+      <div class="strat-btns" id="stratBtns">
+        <button data-s="SO" class="on">S – O</button><button data-s="WO">W – O</button><button data-s="ST">S – T</button><button data-s="WT">W – T</button>
+      </div>
+      <div class="strat-text" id="stratText"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 MARKETING -->
+<section class="slide" data-t="Маркетинг">
+  <div class="kicker a">Розділ 4 · План маркетингу</div>
+  <h2 class="a" style="--i:1">«Тренуватися регулярно, безпечно і з фахівцем — незалежно від обмежень»</h2>
+  <div class="body">
+    <div class="col a" style="--i:2;flex:1.2">
+      <h3>Шлях клієнта</h3>
+      <div class="funnel">
+        <div class="fstep" style="--k:0"><b>1</b>Рекомендація лікаря, протезиста, побратима</div>
+        <div class="fstep" style="--k:1"><b>2</b>Запис через сайт, месенджер або рецепцію</div>
+        <div class="fstep" style="--k:2"><b>3</b>Функціональна оцінка</div>
+        <div class="fstep" style="--k:3"><b>4</b>Перший абонемент</div>
+        <div class="fstep" style="--k:4"><b>5</b>Групи або онлайн-супровід</div>
+        <div class="fstep" style="--k:5"><b>6</b>Продовження абонементу</div>
+      </div>
+    </div>
+    <div class="col a" style="--i:3;flex:1">
+      <div class="card">
+        <h3 style="margin-bottom:16px">Головна ідея</h3>
+        <p class="txt">Клієнти приходять не з масової реклами, а за порадою людей, яким довіряють. Тому основа просування — <b>партнерство з лікарнями, протезистами та ветеранськими ГО</b> і соцмережі.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:14px">Цінова політика</h3>
+        <ul class="clean"><li>дешевше за реабцентр, дорожче за звичайний зал</li><li>знижки для ветеранів, пацієнтів партнерів і супровідників</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 RESEARCH & ADS -->
+<section class="slide" data-t="Дослідження і реклама">
+  <div class="kicker a">Розділ 4 · Дослідження, реклама, акції</div>
+  <h2 class="a" style="--i:1">Маркетингові дослідження та реклама</h2>
+  <div class="body">
+    <div class="col a" style="--i:2;flex:1">
+      <h3>Дослідження · бюджет 35 тис. грн</h3>
+      <div class="res">
+        <div class="r"><div><b>Анкетування 140 осіб</b><span>потреби та готовність платити</span></div><em>травень–червень 2026</em></div>
+        <div class="r"><div><b>«Таємний покупець»</b><span>ціни та умови конкурентів</span></div><em>липень 2026</em></div>
+        <div class="r"><div><b>Глибинні інтерв'ю</b><span>з ГО, протезистами, лікарями</span></div><em>серпень–вересень 2026</em></div>
+        <div class="r"><div><b>Опитування клієнтів</b><span>задоволеність і утримання</span></div><em>щокварталу 2027</em></div>
+      </div>
+    </div>
+    <div class="col a" style="--i:3;flex:1.05">
+      <h3>Реклама у 2027 р. · 360 тис. грн</h3>
+      <div id="adBars"></div>
+      <h3 style="margin-top:6px">Рекламні акції</h3>
+      <div class="promo"><span>«Відкриті двері»</span><span>«Перша оцінка безкоштовно»</span><span>«Приведи друга»</span><span>«Від реабілітації до спорту»</span><span>Турнір з адаптивного фітнесу</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 15 PROCESS -->
+<section class="slide" data-t="Процес надання послуг">
+  <div class="kicker a">Розділ 5 · План виробничої діяльності</div>
+  <h2 class="a" style="--i:1">Процес надання послуг</h2>
+  <div class="flow a" style="--i:2" id="flow">
+    <div class="fl"><div class="dot">1</div><h3>Звернення</h3><p>запис з висновком лікаря про відсутність протипоказань</p></div>
+    <div class="fl"><div class="dot">2</div><h3>Функціональна оцінка</h3><p>тести рівноваги, ходьби та сили</p></div>
+    <div class="fl"><div class="dot">3</div><h3>Індивідуальна програма</h3><p>складається за результатами тестів</p></div>
+    <div class="fl"><div class="dot">4</div><h3>Тренування з інструктором</h3><p>перші 8–12 занять</p></div>
+    <div class="fl"><div class="dot">5</div><h3>Повторна оцінка</h3><p>кожні 6 тижнів</p></div>
+    <div class="fl"><div class="dot">6</div><h3>Наступний етап</h3><div class="branch"><span>індивідуально</span><span>група</span><span>онлайн</span></div></div>
+  </div>
+  <div class="body gap-top" style="flex:none">
+    <div class="card a" style="--i:3;flex:1"><h3 style="margin-bottom:10px">Режим роботи</h3><p class="txt">Пн–Сб 8:00–21:00, Нд 9:00–15:00</p><p class="small" style="margin-top:6px">Зранку — старші клієнти та групи, увечері — індивідуальні тренування для працюючих.</p></div>
+    <div class="card a" style="--i:4;flex:1"><h3 style="margin-bottom:10px">Одночасно в студії</h3><p class="txt">3 інструктори з індивідуальними клієнтами та одна група до 6 осіб</p></div>
+  </div>
+</section>
+
+<!-- 16 SPACE -->
+<section class="slide" data-t="Приміщення">
+  <div class="kicker a">Розділ 5 · Виробничі площі</div>
+  <h2 class="a" style="--i:1">220 м² безбар'єрного простору</h2>
+  <div class="body">
+    <div class="col plan a" style="--i:2;flex:1.2">
+      <svg id="floor" viewBox="0 0 720 500" width="100%"></svg>
+    </div>
+    <div class="col" style="flex:1">
+      <div class="zone-info a" style="--i:3" id="zoneInfo"></div>
+      <div class="card a" style="--i:4">
+        <ul class="clean"><li>окремий вхід з вулиці, поруч зупинка і паркування</li><li>широкі двері та проходи для крісла колісного</li><li>протиковзка підлога, поручні, стельовий підйомник</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 17 EQUIPMENT -->
+<section class="slide" data-t="Обладнання">
+  <div class="kicker a">Розділ 5 · Обладнання та постачальники</div>
+  <h2 class="a" style="--i:1">Обладнання: доступне з крісла і майже без електрики</h2>
+  <div class="body">
+    <div class="col" style="flex:1.45">
+      <div class="eqg a" style="--i:2">
+        <div class="card"><h3>Ходьба і баланс</h3><ul class="clean"><li>бігова доріжка з розвантаженням ваги</li><li>балансувальна платформа</li><li>паралельні бруси, вертикалізатор</li></ul></div>
+        <div class="card"><h3>Сила і витривалість</h3><ul class="clean"><li>силова станція з доступом на візку</li><li>ергометри для рук</li><li>крос-тренажери, функціональний інвентар</li></ul></div>
+      </div>
+      <div class="card a" style="--i:3">
+        <h3 style="margin-bottom:10px">Постачальники — українські, із сервісом у Києві</h3>
+        <div class="sup">
+          <div>Реабілітаційна техніка<span>офіційний дистриб'ютор, гарантія 2 роки</span></div>
+          <div>Тренажери<span>український імпортер, оплата після поставки</span></div>
+          <div>Резервне живлення<span>монтаж «під ключ»</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="power a" style="--i:4;flex:1">
+      <h3 style="color:#fff">Енергонезалежність</h3>
+      <div class="batt"><s></s></div>
+      <div class="row"><span>Гібридний інвертор</span><b>10 кВт</b></div>
+      <div class="row"><span>Автономна робота</span><b>5–6 год</b></div>
+      <p style="color:#C9D5F7;font-size:19px;line-height:1.45">Більшість тренажерів механічні, тож під час відключень студія продовжує працювати.</p>
+      <p style="margin-top:auto;font-size:20px;color:#fff">Вартість обладнання — <b style="color:var(--tactile)">2,14 млн грн</b></p>
+    </div>
+  </div>
+</section>
+
+<!-- 18 OUTPUT & COST -->
+<section class="slide" data-t="План послуг і собівартість">
+  <div class="kicker a">Розділ 5 · План надання послуг і собівартість</div>
+  <h2 class="a" style="--i:1">Відвідування зростуть майже вдвічі за п'ять років</h2>
+  <div class="body">
+    <div class="card a" style="--i:2;flex:1.15;padding:22px 24px">
+      <h3 style="font-size:20px">Відвідувань на рік, тис.</h3>
+      <svg id="visitsChart" viewBox="0 0 700 370" width="100%"></svg>
+    </div>
+    <div class="col a" style="--i:3;flex:1">
+      <h3>Структура собівартості</h3>
+      <div class="cost-bar" id="costBar"></div>
+      <div class="cost-lg" id="costLg"></div>
+      <p class="small">Понад 60 % витрат — оплата праці фахівців, що типово для сфери послуг.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 19 ORG -->
+<section class="slide" data-t="Організаційна структура">
+  <div class="kicker a">Розділ 6 · Організаційний план</div>
+  <h2 class="a" style="--i:1">Лінійна структура, 10 працівників</h2>
+  <div class="body">
+    <div class="org a" style="--i:2">
+      <div class="ob top"><b>Загальні збори учасників</b>два засновники</div>
+      <div class="vl"></div>
+      <div class="ob dir"><b>Директор</b>стратегія, фінанси, партнери</div>
+      <div class="orow" style="--l:15%;--r:15%">
+        <div class="ocol"><div class="ob"><b>Старший інструктор</b>методика і якість</div><div class="vl"></div><div class="ob">Інструктори</div></div>
+        <div class="ocol"><div class="ob"><b>Адміністратори</b></div></div>
+        <div class="ocol"><div class="ob"><b>Маркетолог</b></div></div>
+        <div class="ocol"><div class="ob"><b>Прибирання</b></div></div>
+      </div>
+      <div style="margin-top:26px;display:flex;gap:12px"><div class="ob out">Бухгалтерія — аутсорсинг</div><div class="ob out">Юрист — аутсорсинг</div></div>
+    </div>
+    <div class="col a" style="--i:3;flex:1">
+      <h3>Штат студії</h3>
+      <div class="staff">
+        <div>Директор<b>1</b></div>
+        <div>Інструктори з адаптивного фітнесу<b>5</b></div>
+        <div>Адміністратори<b>2</b></div>
+        <div>Маркетолог (півставки)<b>1</b></div>
+        <div>Прибиральниця<b>1</b></div>
+      </div>
+      <p class="small">Оплата інструктора — оклад плюс доплата за кожне проведене тренування, на рівні приватних клінік Києва.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 20 PERSONNEL -->
+<section class="slide" data-t="Персонал">
+  <div class="kicker a">Розділ 6 · Персонал</div>
+  <h2 class="a" style="--i:1">Добір, адаптація, мотивація і розвиток</h2>
+  <div class="body">
+    <div class="col" style="flex:1.1">
+      <div class="a" style="--i:2;display:flex;flex-direction:column;gap:10px"><span class="tag">Добір</span><p class="txt">Співбесіда → пробне тренування з клієнтом → перевірка знань протипоказань і першої допомоги.</p></div>
+      <div class="a" style="--i:3;display:flex;flex-direction:column;gap:12px"><span class="tag">Адаптація з наставником</span>
+        <div class="weeks" id="weeks"></div>
+        <div class="week-text" id="weekText"></div>
+      </div>
+    </div>
+    <div class="col" style="flex:1">
+      <div class="motiv a" style="--i:4">
+        <div class="card"><h3>Матеріальна мотивація</h3><ul class="clean"><li>доплата за кожне тренування</li><li>премія за утримання клієнтів</li><li>оплата навчання</li><li>медичне страхування</li></ul></div>
+        <div class="card"><h3>Нематеріальна</h3><ul class="clean"><li>гнучкий графік</li><li>тренерство на змаганнях</li><li>визнання досягнень</li><li>кар'єра до керівника другої студії</li></ul></div>
+      </div>
+      <div class="card a" style="--i:5"><h3 style="font-size:19px;color:var(--blue);margin-bottom:10px">Розвиток</h3><p class="txt" style="font-size:20px">Курси з роботи з ампутаціями та після інсульту, домедична допомога, щомісячні внутрішні семінари.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 21 INVESTMENT -->
+<section class="slide" data-t="Програма інвестування">
+  <div class="kicker a">Розділ 7 · Програма інвестування</div>
+  <h2 class="a" style="--i:1">Інвестиції 4,18 млн грн: куди і звідки</h2>
+  <div class="body">
+    <div class="donut-wrap a" style="--i:2;flex:1.25">
+      <svg id="donut" viewBox="0 0 300 300" width="320" height="320" style="flex:none"></svg>
+      <div class="donut-list" id="donutList"></div>
+    </div>
+    <div class="col a" style="--i:3;flex:1;justify-content:center">
+      <h3>Джерела фінансування</h3>
+      <div class="src-bar">
+        <div style="flex:39;background:var(--ink)"><b>39 %</b>власні кошти</div>
+        <div style="flex:55;background:var(--blue)"><b>55 %</b>банківський кредит</div>
+        <div style="flex:6;background:var(--tactile);color:var(--ink);padding:0;align-items:center"><b style="font-size:16px">6 %</b></div>
+      </div>
+      <p class="small">6 % — державний грант на створення власної справи.</p>
+      <div class="card"><p class="txt" style="font-size:20px">Кредит за програмою <b>«Доступні кредити 5-7-9 %»</b> на 3 роки з відстрочкою погашення на перший рік роботи. Інвестиційний етап — жовтень–грудень 2026 р.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 22 FINANCIAL RESULTS -->
+<section class="slide" data-t="Фінансові результати">
+  <div class="kicker a">Розділ 7 · Фінансовий план</div>
+  <h2 class="a" style="--i:1">Прибуток з другого року роботи</h2>
+  <div class="body">
+    <div class="card a" style="--i:2;flex:1.55;padding:18px 22px"><svg id="plChart" viewBox="0 0 980 440" width="100%"></svg></div>
+    <div class="takeaways a" style="--i:3;flex:1">
+      <div class="card"><b>2027</b><p>Збитковий рік: студія набирає клієнтів. Збиток покривається резервом коштів.</p></div>
+      <div class="card"><b>2028–2031</b><p>Стабільний прибуток; рентабельність продажів зростає до 23 %.</p></div>
+      <div class="card"><b>Гроші</b><p>Залишок коштів на рахунку додатний у кожному кварталі.</p></div>
+      <p class="small">Підприємство нове, тому складено прогнозні звіт про фінансові результати, рух коштів і баланс.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 23 EFFICIENCY -->
+<section class="slide" data-t="Результати інвестування">
+  <div class="kicker a">Розділ 7 · Результати інвестування</div>
+  <h2 class="a" style="--i:1">Кожна вкладена гривня повертає 1,43 грн</h2>
+  <div class="body">
+    <div class="card a" style="--i:2;flex:1.4;padding:20px 22px">
+      <h3 style="font-size:20px">Накопичений грошовий потік з урахуванням вартості грошей, млн грн</h3>
+      <svg id="npvChart" viewBox="0 0 860 440" width="100%"></svg>
+    </div>
+    <div class="kpis a" style="--i:3;flex:1;grid-template-columns:1fr 1fr;align-content:center">
+      <div class="kpi hl"><div class="big" style="font-size:46px">4,1<span class="unit">року</span></div><div class="lbl">період окупності</div></div>
+      <div class="kpi"><div class="big" style="font-size:46px">1,8<span class="unit">млн</span></div><div class="lbl">чиста теперішня вартість (NPV)</div></div>
+      <div class="kpi"><div class="big" style="font-size:46px">32<span class="unit">%</span></div><div class="lbl">внутрішня норма дохідності</div></div>
+      <div class="kpi"><div class="big" style="font-size:46px">15,7<span class="unit">тис.</span></div><div class="lbl">відвідувань на рік — точка беззбитковості</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 24 RISKS -->
+<section class="slide" data-t="Ризики">
+  <div class="kicker a">Розділ 8 · Аналіз ризиків</div>
+  <h2 class="a" style="--i:1">Ризики проєкту та заходи протидії</h2>
+  <div class="body">
+    <div class="card a" style="--i:2;flex:1.2;padding:18px 20px"><svg id="riskChart" viewBox="0 0 760 500" width="100%"></svg></div>
+    <div class="col a" style="--i:3;flex:1">
+      <div class="risk-info" id="riskInfo"></div>
+      <div class="risk-list" id="riskList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 25 INSURANCE -->
+<section class="slide" data-t="Страхування">
+  <div class="kicker a">Розділ 8 · Страхування</div>
+  <h2 class="a" style="--i:1">Що передаємо страховій компанії</h2>
+  <div class="ins">
+    <div class="card a" style="--i:2"><div class="ic"><svg width="30" height="30" viewBox="0 0 30 30"><path d="M4 14 15 5l11 9v12H4z" fill="none" stroke="#1E4DD8" stroke-width="2.5" stroke-linejoin="round"/></svg></div><h3>Майно</h3><p>Обладнання та ремонт, включно з воєнними ризиками.</p></div>
+    <div class="card a" style="--i:3"><div class="ic"><svg width="30" height="30" viewBox="0 0 30 30"><path d="M15 4 25 8v7c0 6-4 9-10 11C9 24 5 21 5 15V8z" fill="none" stroke="#1E4DD8" stroke-width="2.5" stroke-linejoin="round"/></svg></div><h3>Відповідальність</h3><p>Шкода здоров'ю чи майну клієнтів.</p></div>
+    <div class="card a" style="--i:4"><div class="ic"><svg width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="9" r="4" fill="none" stroke="#1E4DD8" stroke-width="2.5"/><path d="M7 26c0-5 3.5-8 8-8s8 3 8 8" fill="none" stroke="#1E4DD8" stroke-width="2.5"/></svg></div><h3>Нещасні випадки</h3><p>Груповий договір для клієнтів під час занять.</p></div>
+    <div class="card a" style="--i:5"><div class="ic"><svg width="30" height="30" viewBox="0 0 30 30"><path d="M12 5h6v7h7v6h-7v7h-6v-7H5v-6h7z" fill="none" stroke="#1E4DD8" stroke-width="2.5" stroke-linejoin="round"/></svg></div><h3>Медичне страхування</h3><p>Для працівників після випробувального терміну.</p></div>
+  </div>
+  <div class="body gap-top" style="flex:none">
+    <div class="kpi hl a" style="--i:6;flex:0 0 380px"><div class="big" style="font-size:48px">105<span class="unit">тис. грн</span></div><div class="lbl">страхові платежі на рік</div></div>
+    <div class="card a" style="--i:7;flex:1;display:flex;align-items:center"><p class="txt">Страховика оберемо, порівнявши кілька пропозицій; обов'язкова умова — покриття воєнних ризиків. Проєкт залишається ефективним навіть при зростанні витрат на 10 %, тож головне — вчасно набрати клієнтів.</p></div>
+  </div>
+</section>
+
+<!-- 26 CONCLUSIONS -->
+<section class="slide" data-t="Висновки">
+  <div class="kicker a">Висновки</div>
+  <h2 class="a" style="--i:1">Проєкт доцільний економічно і соціально</h2>
+  <div class="concl">
+    <div class="card a" style="--i:2"><span class="tag">Потреба</span><h3>Є реальний попит</h3><p>Тисячі людей після реабілітації не мають де безпечно тренуватися, а прямих конкурентів майже немає.</p></div>
+    <div class="card a" style="--i:3"><span class="tag">Фінанси</span><h3>Проєкт окупається</h3><p>Прибуток з другого року, окупність — 4,1 року, кожна гривня повертає 1,43 грн.</p></div>
+    <div class="card a" style="--i:4"><span class="tag">Стійкість</span><h3>Ризики під контролем</h3><p>Резерв коштів, відстрочка кредиту, резервне живлення та страхування захищають перший рік.</p></div>
+  </div>
+  <div class="final-line a" style="--i:5">«Рух без меж» дає людям з обмеженими можливостями <b>регулярні, безпечні та доступні тренування</b> і створює <b>10 нових робочих місць</b>.</div>
+</section>
+
+<!-- 27 THANKS -->
+<section class="slide dark cover" id="s-thanks" data-t="Дякуємо">
+  <canvas class="dots"></canvas>
+  <div class="inner">
+    <div class="kicker a">ТОВ «Рух без меж» · бізнес-план проєкту</div>
+    <h1 class="a" style="--i:1">Дякуємо<br>за увагу!</h1>
+    <p class="lead a" style="--i:2">Готові відповісти на ваші запитання.</p>
+    <div class="authors a" style="--i:3;margin-top:40px">
+      <div class="names"><span>Команда проєкту</span><div>Христина Трембач</div><div>Юлія Чапля</div><div>Діана Шкарадюк</div><div>Софія Яворівська</div></div>
+    </div>
+  </div>
+</section>
+
+</div></div>
+<div id="prog"></div>
+<div id="nav"><button id="bPrev" aria-label="Попередній слайд">←</button><button id="bNext" aria-label="Наступний слайд">→</button></div>
+
+<script>
+(function(){
+const NS="http://www.w3.org/2000/svg";
+const $=s=>document.querySelector(s);
+const fmt=(n,d=0)=>{const s=Math.abs(n).toFixed(d).replace(".",",");const [a,b]=s.split(",");return (n<0?"−":"")+a.replace(/\B(?=(\d{3})+(?!\d))/g," ")+(b?","+b:"")};
+function el(tag,attrs={},parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+const C={ink:"#0F1B2D",blue:"#1E4DD8",deep:"#16349A",soft:"#DCE5FB",y:"#F2BF1A",line:"#CDD5D8",muted:"#5A6577",bad:"#C4442E",card:"#FFFFFF"};
+
+/* ===== deck engine: full-screen stage ===== */
+const slides=[...document.querySelectorAll(".slide")];
+const N=slides.length;let cur=0;
+const stage=$("#stage"),vp=$("#viewport");
+function fit(){const w=vp.clientWidth,h=vp.clientHeight;const s=Math.min(w/1600,h/900);stage.style.width=(w/s)+"px";stage.style.height=(h/s)+"px";stage.style.transform=`scale(${s})`}
+window.addEventListener("resize",fit);document.addEventListener("fullscreenchange",fit);fit();
+
+slides.forEach((s,i)=>{const f=document.createElement("div");f.className="foot";f.innerHTML=`<span class="brand"><i></i>Рух без меж</span><span class="mono">${i+1}</span>`;s.appendChild(f)});
+
+const hooks={};
+function go(i){
+  i=Math.max(0,Math.min(N-1,i));
+  slides.forEach((s,k)=>{s.classList.toggle("active",k===i);s.classList.toggle("past",k<i)});
+  cur=i;$("#prog").style.width=((i+1)/N*100)+"%";
+  try{history.replaceState(null,"","#s"+(i+1))}catch(e){}
+  slides[i].querySelectorAll("[data-count]").forEach(countUp);
+  const h=slides[i].dataset.hook;if(h&&hooks[h])hooks[h]();
+}
+function countUp(e){const to=parseFloat(e.dataset.count),dec=+(e.dataset.dec||0);const t0=performance.now(),D=1100;const r=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  (function f(t){const p=r?1:Math.min(1,Math.max(0,(t-t0)/D));e.textContent=fmt(to*(1-Math.pow(1-p,3)),dec);if(p<1)requestAnimationFrame(f)})(t0)}
+function full(){try{if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen()}catch(e){}}
+document.addEventListener("keydown",e=>{
+  if(["ArrowRight","ArrowDown","PageDown"," ","Enter"].includes(e.key)){e.preventDefault();go(cur+1)}
+  else if(["ArrowLeft","ArrowUp","PageUp","Backspace"].includes(e.key)){e.preventDefault();go(cur-1)}
+  else if(e.key==="Home")go(0);else if(e.key==="End")go(N-1);
+  else if(e.key==="f"||e.key==="а")full();
+});
+let tx=null;vp.addEventListener("touchstart",e=>{tx=e.touches[0].clientX},{passive:true});
+vp.addEventListener("touchend",e=>{if(tx==null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50)go(cur+(d<0?1:-1));tx=null});
+$("#bPrev").onclick=()=>go(cur-1);$("#bNext").onclick=()=>go(cur+1);
+let hideT;document.addEventListener("mousemove",()=>{$("#nav").classList.add("show");document.body.style.cursor="";clearTimeout(hideT);hideT=setTimeout(()=>{$("#nav").classList.remove("show");document.body.style.cursor="none"},2200)});
+
+/* ===== cover dots ===== */
+document.querySelectorAll("canvas.dots").forEach(cv=>{
+  const ctx=cv.getContext("2d");const r=matchMedia("(prefers-reduced-motion: reduce)").matches;let W=0,H=0;
+  function draw(t){
+    const w=cv.clientWidth,h=cv.clientHeight;
+    if(w&&h&&(w!==W||h!==H)){W=w;H=h;cv.width=W*1.5;cv.height=H*1.5;ctx.setTransform(1.5,0,0,1.5,0,0)}
+    ctx.clearRect(0,0,W,H);const step=34,x0=W*0.64;
+    for(let x=x0;x<W+step;x+=step)for(let y=step/2;y<H;y+=step){
+      const k=Math.max(0,Math.sin(x*0.006+y*0.004-t*0.0012));const fade=Math.min(1,(x-x0)/360);
+      ctx.fillStyle=k>0.82?`rgba(242,191,26,${0.95*fade})`:`rgba(220,229,251,${(0.12+k*0.35)*fade})`;
+      ctx.beginPath();ctx.arc(x,y,2.2+k*5.5,0,Math.PI*2);ctx.fill();}
+    if(r)return;
+    if(slides[cur].contains(cv))requestAnimationFrame(draw);else setTimeout(()=>requestAnimationFrame(draw),400);
+  }
+  requestAnimationFrame(draw);
+});
+
+/* ===== TOC ===== */
+[["1","Юридичний план та історична довідка","Юридичний план"],["2","Характеристика послуг","Послуги"],["3","Аналіз ринків збуту та конкурентів","Ринок збуту"],["4","План маркетингової діяльності","Маркетинг"],["5","План виробничої діяльності","Процес надання послуг"],["6","Організаційний план","Організаційна структура"],["7","Фінансовий план та програма інвестування","Програма інвестування"],["8","Аналіз ризиків та страхування","Ризики"]].forEach(([n,t,target],k)=>{
+  const idx=slides.findIndex(s=>s.dataset.t===target);const b=document.createElement("button");b.className="a";b.style.setProperty("--i",k+2);
+  b.innerHTML=`<span class="n">${n}</span><span class="t">${t}</span>`;b.onclick=()=>go(idx);$("#toc").appendChild(b)});
+
+/* ===== timeline ===== */
+const tl=[["II–IV.2026","Формування бізнес-ідеї; консультації з лікарями, протезистами та ветеранськими організаціями."],["V–VI.2026","Опитування 140 потенційних клієнтів і оцінка ринку."],["VII–VIII.2026","Аналіз конкурентів, пошук приміщення, домовленості з постачальниками та банком."],["IX.2026","Державна реєстрація ТОВ «Рух без меж», відкриття рахунку."],["X–XII.2026","Кредит і грант, ремонт приміщення, закупівля обладнання, добір персоналу."],["I.2027","Відкриття студії та дні відкритих дверей."],["2028","План: вихід на планове завантаження, перший повний прибутковий рік."],["2029","План: погашення кредиту; підготовка до відкриття другої студії."]];
+const tlPts=$("#tlPts");
+function tlSel(i){[...tlPts.children].forEach((b,k)=>{b.classList.toggle("on",k===i);b.classList.toggle("done",k<=i)});$("#tlFill").style.width=((i+.5)/tl.length*100)+"%";$("#tlDetail").innerHTML=`<b class="mono" style="color:var(--blue)">${tl[i][0]}</b> — ${tl[i][1]}`}
+tl.forEach(([d],k)=>{const b=document.createElement("button");b.className="tl-pt"+(k>=6?" plan":"");b.innerHTML=`<i></i><span>${d}</span>`;b.onclick=()=>tlSel(k);tlPts.appendChild(b)});
+tlSel(3);
+
+/* ===== programs ===== */
+const progs=[["«Сила без обмежень»","Люди на кріслах колісних","Сила рук і плечей, витривалість, навички пересаджування","Силова станція з доступом на візку, ергометр для рук"],["«Крок уперед»","Люди з ампутаціями ніг","Рівна хода, баланс, сила м'язів тулуба","Бігова доріжка з розвантаженням ваги, бруси, балансувальна платформа"],["«Стійкість»","Люди віком 60+","Профілактика падінь, рівновага, сила ніг","Балансувальна платформа, степ-платформи, амортизатори"],["«Нова рухливість»","Люди після інсульту","Координація, сила ураженої сторони, витривалість","Крос-тренажер, вертикалізатор, бруси"],["«Повернення у форму»","Ветерани після реабілітації","Загальна фізична підготовка, повернення до спорту","Повний набір обладнання студії"]];
+const pt=$("#progTabs"),pp=$("#progPanel");
+function progSel(i){[...pt.children].forEach((b,k)=>b.classList.toggle("on",k===i));const p=progs[i];pp.innerHTML=`<div class="dots"></div><span class="tag y">Програма ${i+1} з 5</span><div class="big">${p[0]}</div><div class="row"><span>Для кого</span><div>${p[1]}</div></div><div class="row"><span>Завдання</span><div>${p[2]}</div></div><div class="row"><span>Обладнання</span><div>${p[3]}</div></div>`}
+progs.forEach((p,k)=>{const b=document.createElement("button");b.innerHTML=`<b>${p[0]}</b><span>${p[1]}</span>`;b.onclick=()=>progSel(k);pt.appendChild(b)});progSel(0);
+
+/* ===== comparison ===== */
+const cmp=[["Доступність для людей на візках",5,2,4],["Підготовка інструкторів",5,1,5],["Спеціалізоване обладнання",4,2,5],["Можливість регулярних занять",5,5,2],["Групи за рівнем можливостей",5,1,2],["Контроль прогресу",5,1,4]];
+const rate=v=>`<span class="rate">${[1,2,3,4,5].map(k=>`<i class="${k<=v?"f":""}"></i>`).join("")}</span>`;
+$("#cmpTable").innerHTML=`<tr><th>Характеристика</th><th class="us">Студія «Рух без меж»</th><th>Фітнес-клуб</th><th>Реабцентр</th></tr>`+cmp.map(r=>`<tr><td>${r[0]}</td><td class="us">${rate(r[1])}</td><td>${rate(r[2])}</td><td>${rate(r[3])}</td></tr>`).join("")+`<tr class="avg"><td>Середня оцінка</td><td class="us" style="color:var(--blue)">4,8</td><td>2,0</td><td>3,7</td></tr>`;
+
+/* ===== market ===== */
+const groups=[["Люди 60+ з обмеженою рухливістю",35.4],["Ветерани з наслідками травм",32.4],["Люди з інвалідністю",29.6],["Люди після інсульту",16.2]];
+$("#pane-cap").innerHTML=`<p class="small">Ємність ринку за групами клієнтів, млн грн на рік</p>`+groups.map(g=>`<div class="hbar"><div class="t">${g[0]}</div><div class="track"><s class="grow" style="width:${g[1]/36*100}%"></s></div><div class="v">${fmt(g[1],1)}</div></div>`).join("")+`<p class="small" style="margin-top:16px">Ветерани найчастіше готові займатися регулярно.</p>`;
+const strs=[["Вік",[["до 35",18],["35–59",42],["60+",40]]],["Стать",[["чоловіки",58],["жінки",42]]],["Рівень доходу",[["високий",15],["середній",55],["нижче середнього",30]]]];
+const sc=[C.ink,C.blue,"#7E9BEA"];
+$("#pane-str").innerHTML=`<p class="small">Очікувана структура клієнтів, %</p><div class="stack">`+strs.map(([t,parts])=>`<div><div style="font-size:20px;font-weight:600;margin-bottom:8px">${t}</div><div class="sb">${parts.map((p,k)=>`<div style="flex:${p[1]};background:${sc[k]}">${p[1]} %</div>`).join("")}</div><div class="lg">${parts.map(p=>`<span style="flex:${p[1]}">${p[0]}</span>`).join("")}</div></div>`).join("")+`</div>`;
+$("#mktTabs").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;[...$("#mktTabs").children].forEach(c=>c.classList.toggle("on",c===b));$("#pane-cap").hidden=b.dataset.p!=="cap";$("#pane-str").hidden=b.dataset.p!=="str"});
+
+/* ===== competitors ===== */
+const comps=[["Студія «Рух без меж»",4.55,"Поєднує доступне середовище, кваліфікований персонал і регулярні заняття за доступною ціною.",1],["Виїзні фізичні терапевти",3.85,"Зручні для людей зі складною мобільністю, але без спеціального обладнання."],["Державні реабвідділення",3.60,"Сильний персонал і безоплатно, але курс короткий, а черги довгі."],["Ветеранські простори ГО",3.50,"Популярні серед ветеранів, але обладнання базове, заняття нерегулярні."],["Приватні реабцентри",3.05,"Добре обладнані, проте надто дорогі для регулярних занять."],["Мережеві фітнес-клуби",2.95,"Доступні за ціною, але не пристосовані для людей з обмеженнями."]];
+const cr=$("#compRows");
+function compSel(i){[...cr.children].forEach((b,k)=>b.classList.toggle("on",k===i));const c=comps[i];$("#compNote").innerHTML=`<span class="tag${c[3]?"":" y"}">${c[3]?"Наша перевага":"Слабке місце"}</span><h3 style="margin:16px 0 12px;font-size:26px">${c[0]}</h3><p class="txt">${c[2]}</p>`}
+comps.forEach((c,k)=>{const b=document.createElement("button");b.className="comp-row"+(c[3]?" us":"");b.innerHTML=`<span class="t">${c[0]}</span><span class="track"><s class="grow" style="width:${c[1]/5*100}%"></s></span><span class="v">${fmt(c[1],2)}</span>`;b.onmouseenter=()=>compSel(k);b.onclick=()=>compSel(k);cr.appendChild(b)});
+compSel(0);
+
+/* ===== SWOT ===== */
+const strat={SO:["S – O · сили + можливості",["Використати зв'язки засновників для швидкого набору клієнтів","Стати надавачем послуг за державними програмами для ветеранів","Укласти договори з протезними підприємствами"]],WO:["W – O · можливості проти слабкостей",["Залучити грант, щоб зменшити кредитне навантаження","Розвивати онлайн-супровід без збільшення площі"]],ST:["S – T · сили проти загроз",["Утримувати клієнтів якістю та контролем прогресу","Працювати під час відключень завдяки резервному живленню","Готувати кадровий резерв зі студентів-практикантів"]],WT:["W – T · захисна стратегія",["Групові формати для клієнтів з нижчим доходом","Збільшувати штат поступово, за завантаженням","Страхувати майно та відповідальність"]]};
+function stratSel(k){[...$("#stratBtns").children].forEach(b=>b.classList.toggle("on",b.dataset.s===k));document.querySelectorAll(".sq").forEach(q=>{const on=k.includes(q.dataset.q);q.classList.toggle("lit",on);q.classList.toggle("fade",!on)});const s=strat[k];$("#stratText").innerHTML=`<h3>${s[0]}</h3><ul class="clean">${s[1].map(x=>`<li>${x}</li>`).join("")}</ul>`}
+$("#stratBtns").addEventListener("click",e=>{const b=e.target.closest("button");if(b)stratSel(b.dataset.s)});stratSel("SO");
+
+/* ===== ad bars ===== */
+$("#adBars").innerHTML=[["Соцмережі та таргет",168,C.blue],["Партнери, заходи, змагання",75,C.y],["Google та сайт",73,C.deep],["Друк і медіа",44,"#7E9BEA"]].map(a=>`<div class="ad"><span>${a[0]}</span><span class="track"><s class="grow" style="width:${a[1]/168*100}%;background:${a[2]}"></s></span><b>${a[1]}</b></div>`).join("")+`<p class="small">тис. грн; найбільше — у перші місяці після відкриття</p>`;
+
+/* ===== process animation ===== */
+const flowEls=[...document.querySelectorAll("#flow .fl")];let flowT;
+slides.find(s=>s.dataset.t==="Процес надання послуг").dataset.hook="flow";
+hooks.flow=()=>{clearInterval(flowT);let k=0;flowT=setInterval(()=>{flowEls.forEach((f,j)=>f.classList.toggle("on",j===k));k=(k+1)%flowEls.length},1200)};
+
+/* ===== floor plan ===== */
+(function(){const zones=[["Тренажерна зала",90,"Індивідуальні тренування на спеціалізованому обладнанні; широкі проходи та поручні вздовж стін.",10,10,400,300],["Зала групових занять",55,"Групові заняття до 6 осіб.",420,10,290,190],["Кабінет оцінки",16,"Первинна та повторна функціональна оцінка, консультації.",420,210,150,100],["Технічне",12,"Інвентар і система резервного живлення.",580,210,130,100],["Роздягальні з душовими",24,"Доступні душові з відкидними сидіннями.",10,320,260,140],["Санвузли",8,"Доступні, з поручнями та кнопкою виклику.",280,320,120,140],["Рецепція",15,"Зустріч клієнтів і зона очікування для супровідників.",410,320,300,140]];
+const s=$("#floor");const tex=el("pattern",{id:"tact",width:14,height:14,patternUnits:"userSpaceOnUse"},el("defs",{},s));el("circle",{cx:7,cy:7,r:2.4,fill:C.y},tex);
+const rects=[],labs=[],areas=[];
+function sel(i){rects.forEach((r,k)=>{r.setAttribute("fill",k===i?C.blue:C.card);r.setAttribute("stroke",k===i?C.blue:C.ink)});labs.forEach((t,k)=>t.forEach(x=>x.style.fill=k===i?"#fff":C.ink));areas.forEach((t,k)=>t.style.fill=k===i?"#DCE5FB":C.muted);const z=zones[i];$("#zoneInfo").innerHTML=`<div class="big">${z[1]} м²</div><h3>${z[0]}</h3><p>${z[2]}</p>`}
+zones.forEach((z,i)=>{const r=el("rect",{x:z[3],y:z[4],width:z[5],height:z[6],fill:C.card,stroke:C.ink,"stroke-width":2.5,class:"z",rx:2},s);r.onmouseenter=()=>sel(i);r.onclick=()=>sel(i);rects.push(r);
+ const words=z[0].split(" ");const lines=[];let ln="";words.forEach(w=>{if((ln+" "+w).trim().length>(z[5]>250?24:12)){lines.push(ln);ln=w}else ln=(ln+" "+w).trim()});lines.push(ln);
+ labs.push(lines.map((l,k)=>{const t=el("text",{x:z[3]+14,y:z[4]+30+k*21,"font-size":17,"pointer-events":"none"},s,l);t.style.fontFamily="Onest,sans-serif";t.style.fontWeight=600;return t}));
+ areas.push(el("text",{x:z[3]+14,y:z[4]+z[6]-14,"font-size":15,"pointer-events":"none"},s,z[1]+" м²"))});
+el("rect",{x:640,y:462,width:70,height:8,fill:"url(#tact)"},s);
+el("text",{x:710,y:494,"text-anchor":"end","font-size":14},s,"↑ окремий вхід з вулиці");
+sel(0);})();
+
+/* ===== visits & cost ===== */
+(function(){const s=$("#visitsChart");const yrs=[2027,2028,2029,2030,2031],v=[12.2,18.0,21.2,22.6,23.2];const x0=60,x1=680,y0=320,y1=30,max=25;const gw=(x1-x0)/5;const Y=val=>y0-val/max*(y0-y1);
+[0,10,20].forEach(g=>{el("line",{x1:x0,x2:x1,y1:Y(g),y2:Y(g),stroke:C.line},s);el("text",{x:x0-12,y:Y(g)+5,"text-anchor":"end","font-size":15},s,g)});
+v.forEach((val,i)=>{const cx=x0+gw*i+gw/2;const r=el("rect",{x:cx-38,y:Y(val),width:76,height:y0-Y(val),fill:i===0?"#7E9BEA":C.blue,class:"growy"},s);r.style.transitionDelay=(0.2+i*0.1)+"s";
+ el("text",{x:cx,y:Y(val)-12,"text-anchor":"middle","font-size":19,class:"lbl-ink","font-weight":500},s,fmt(val,1));el("text",{x:cx,y:y0+30,"text-anchor":"middle","font-size":16},s,yrs[i])});})();
+(function(){const parts=[["Оплата праці з ЄСВ",61,C.ink],["Оренда",16,C.blue],["Амортизація",7,"#7E9BEA"],["Маркетинг",5,C.y],["Інше",11,"#A9B3BF"]];
+$("#costBar").innerHTML=parts.map(p=>`<div style="flex:${p[1]};background:${p[2]}">${p[1]>10?p[1]+" %":""}</div>`).join("");
+$("#costLg").innerHTML=parts.map(p=>`<div><i style="background:${p[2]}"></i><span>${p[0]}</span><b>${p[1]} %</b></div>`).join("");})();
+
+/* ===== adaptation ===== */
+const wk=["Знайомство зі студією, правилами безпеки та CRM; спостереження за тренуваннями наставника.","Тренування разом з наставником; техніки пересаджування та страхування клієнтів.","Самостійні тренування з клієнтами з невеликими обмеженнями під наглядом.","Повністю самостійна робота, атестація, відгуки клієнтів."];
+function wkSel(i){[...$("#weeks").children].forEach((b,k)=>b.classList.toggle("on",k===i));$("#weekText").textContent=wk[i]}
+wk.forEach((w,k)=>{const b=document.createElement("button");b.innerHTML=`<b>${k+1}</b><span>тиждень</span>`;b.onclick=()=>wkSel(k);$("#weeks").appendChild(b)});wkSel(0);
+
+/* ===== donut ===== */
+(function(){const items=[["Обладнання",2140,C.blue],["Резерв коштів на перший рік",800,C.y],["Ремонт і пристосування",520,C.ink],["Меблі, техніка, CRM",280,"#B7C7F3"],["Резервне живлення, вентиляція",260,C.deep],["Маркетинг до відкриття",180,"#7E9BEA"]];
+const tot=4180,s=$("#donut"),R=110,cx=150,cy=150,L=2*Math.PI*R;let off=0;const arcs=[];
+items.forEach(it=>{const len=it[1]/tot*L;arcs.push(el("circle",{cx,cy,r:R,fill:"none",stroke:it[2],"stroke-width":46,"stroke-dasharray":`${Math.max(0,len-2)} ${L}`,"stroke-dashoffset":-off,transform:`rotate(-90 ${cx} ${cy})`},s));off+=len});
+const t1=el("text",{x:cx,y:cy+2,"text-anchor":"middle","font-size":34,class:"lbl-ink"},s,"4,18");t1.style.fontFamily="Unbounded,sans-serif";t1.style.fontWeight=800;
+const t2=el("text",{x:cx,y:cy+28,"text-anchor":"middle","font-size":15},s,"млн грн");
+const list=$("#donutList");
+function hi(k){arcs.forEach((a,j)=>a.setAttribute("stroke-width",j===k?58:46));[...list.children].forEach((d,j)=>d.classList.toggle("on",j===k));if(k==null){t1.textContent="4,18";t2.textContent="млн грн"}else{t1.textContent=Math.round(items[k][1]/tot*100)+" %";t2.textContent="інвестицій"}}
+items.forEach((it,k)=>{const d=document.createElement("div");d.innerHTML=`<i style="background:${it[2]}"></i><span>${it[0]}</span><em>${Math.round(it[1]/tot*100)} %</em>`;d.onmouseenter=()=>hi(k);d.onmouseleave=()=>hi(null);list.appendChild(d);arcs[k].onmouseenter=()=>hi(k);arcs[k].onmouseleave=()=>hi(null)});})();
+
+/* ===== P&L chart (млн грн) ===== */
+(function(){const yrs=[2027,2028,2029,2030,2031],rev=[5.8,9.1,11.4,13.0,14.3],np=[-1.0,0.9,2.1,2.8,3.3];
+const s=$("#plChart");const x0=60,x1=960,y0=370,y1=50,mn=-2,mx=15;const Y=v=>y0-(v-mn)/(mx-mn)*(y0-y1);const gw=(x1-x0)/5;
+[0,5,10,15].forEach(g=>{el("line",{x1:x0,x2:x1,y1:Y(g),y2:Y(g),stroke:g===0?C.ink:C.line,"stroke-width":g===0?1.5:1},s);el("text",{x:x0-12,y:Y(g)+5,"text-anchor":"end","font-size":15},s,g)});
+yrs.forEach((y,i)=>{const cx=x0+gw*i+gw/2;const r=el("rect",{x:cx-55,y:Y(rev[i]),width:110,height:Y(0)-Y(rev[i]),fill:C.soft,class:"growy"},s);r.style.transitionDelay=(0.2+i*.08)+"s";
+ el("text",{x:cx,y:Y(rev[i])-12,"text-anchor":"middle","font-size":17,fill:C.blue},s,fmt(rev[i],1));
+ el("text",{x:cx,y:y0+40,"text-anchor":"middle","font-size":18,class:"lbl-ink"},s,y)});
+let d="";np.forEach((v,i)=>d+=(i?"L":"M")+(x0+gw*i+gw/2)+","+Y(v));
+const p=el("path",{d,fill:"none",stroke:C.ink,"stroke-width":4,class:"draw"},s);p.style.setProperty("--len",1100);
+np.forEach((v,i)=>{const cx=x0+gw*i+gw/2;el("circle",{cx,cy:Y(v),r:10,fill:v<0?C.bad:C.y,stroke:C.ink,"stroke-width":2.5},s);el("text",{x:cx+16,y:Y(v)+(v<0?24:-12),"font-size":18,class:"lbl-ink","font-weight":500},s,fmt(v,1))});
+[[C.soft,"Чистий дохід"],[C.y,"Чистий прибуток"]].forEach((l,k)=>{el("rect",{x:x0+k*220,y:6,width:18,height:18,fill:l[0],stroke:k?C.ink:"none"},s);el("text",{x:x0+28+k*220,y:21,"font-size":16,class:"lbl-ink"},s,l[1])});
+el("text",{x:x1,y:21,"text-anchor":"end","font-size":15},s,"млн грн");})();
+
+/* ===== payback chart (млн грн) ===== */
+(function(){const s=$("#npvChart");const yrs=["2026","2027","2028","2029","2030","2031"],cum=[-4.18,-4.37,-3.36,-1.79,-0.17,1.81];
+const x0=60,x1=850,y0=380,y1=30,mn=-5,mx=2.5;const Y=v=>y0-(v-mn)/(mx-mn)*(y0-y1);const gw=(x1-x0)/6;
+[-4,-2,0,2].forEach(g=>{el("line",{x1:x0,x2:x1,y1:Y(g),y2:Y(g),stroke:g===0?C.ink:C.line,"stroke-width":g===0?2:1},s);el("text",{x:x0-12,y:Y(g)+5,"text-anchor":"end","font-size":15},s,fmt(g))});
+cum.forEach((v,i)=>{const cx=x0+gw*i+gw/2,bw=70;const top=Math.min(Y(v),Y(0)),h=Math.abs(Y(v)-Y(0));const r=el("rect",{x:cx-bw/2,y:top,width:bw,height:Math.max(h,2),fill:v<0?"#E9B9AE":C.blue,class:"growy"+(v<0?" neg":"")},s);r.style.transitionDelay=(0.2+i*0.15)+"s";
+ el("text",{x:cx,y:v<0?Y(v)+26:Y(v)-12,"text-anchor":"middle","font-size":18,class:"lbl-ink","font-weight":500},s,fmt(v,1));
+ el("text",{x:cx,y:y0+36,"text-anchor":"middle","font-size":16},s,yrs[i])});
+const bx=x0+gw*5.1;el("line",{x1:bx,x2:bx,y1:y1+20,y2:y0,stroke:C.y,"stroke-width":3,"stroke-dasharray":"6 6"},s);
+el("text",{x:bx-10,y:y1+14,"text-anchor":"end","font-size":16,fill:C.ink},s,"окупність — 4,1 року");})();
+
+/* ===== risks ===== */
+(function(){const R=[["Ринковий","Повільний набір клієнтів",.4,4,"Реклама і запис ще до відкриття, безкоштовна перша оцінка, направлення від партнерських реабзакладів."],["Ринковий","Зниження платоспроможності",.3,3,"Групові формати, державні програми, договори з ГО та фондами."],["Конкурентний","Прихід великої мережі",.2,3,"Лояльність клієнтів, партнерства з лікарями та протезистами, якість."],["Безпековий","Пошкодження приміщення",.1,5,"Страхування майна з воєнними ризиками, план перенесення занять до партнерів."],["Технічний","Відключення електроенергії",.6,2,"Резервне живлення, механічні тренажери, гнучкий розклад."],["Технічний","Поломка обладнання",.2,3,"Гарантійний сервіс, навчання персоналу."],["Кадровий","Нестача інструкторів",.4,3,"Конкурентна оплата, навчання, резерв зі студентів-практикантів."],["Кадровий","Мобілізація працівників",.3,3,"Бронювання, залучення ветеранів і жінок до штату."],["Операційний","Травма клієнта",.1,5,"Обов'язкова оцінка, стандарти безпеки, страхування."],["Фінансовий","Зростання витрат",.5,2,"Довгий договір оренди з фіксованою індексацією, контроль бюджету."],["Фінансовий","Неотримання гранту",.3,1,"Резерв з власних коштів."],["Правовий","Зміна державних програм",.3,2,"Різні джерела доходу; програми — не більше 10 % доходу."]];
+const s=$("#riskChart");const x0=80,x1=740,y0=420,y1=20;const X=p=>x0+p/0.7*(x1-x0),Y=im=>y0-(im-0.5)/5*(y0-y1);
+const cell=(p,im)=>{const l=p*im;return l>2?"#F8E0DA":l>=1?"#FBEFC2":"#E4F1E9"};
+for(let i=0;i<14;i++)for(let j=0;j<50;j++){el("rect",{x:X(i*0.05),y:Y(0.5+(j+1)*0.1),width:X(0.05)-X(0)+0.5,height:Y(0.5)-Y(0.6)+0.5,fill:cell(i*0.05+0.025,0.55+j*0.1)},s)}
+[0,.2,.4,.6].forEach(g=>el("text",{x:X(g),y:y0+26,"text-anchor":"middle","font-size":15},s,fmt(g,1)));
+[1,2,3,4,5].forEach(g=>{el("line",{x1:x0,x2:x1,y1:Y(g),y2:Y(g),stroke:"#fff"},s);el("text",{x:x0-14,y:Y(g)+5,"text-anchor":"end","font-size":15},s,g)});
+el("text",{x:x1,y:y0+52,"text-anchor":"end","font-size":15},s,"ймовірність →");el("text",{x:x0-60,y:y1+12,"font-size":15},s,"вплив");
+[["низький","#E4F1E9"],["середній","#FBEFC2"],["високий","#F8E0DA"]].forEach((l,k)=>{el("rect",{x:x0+k*150,y:y0+40,width:15,height:15,fill:l[1],stroke:C.line},s);el("text",{x:x0+22+k*150,y:y0+53,"font-size":14},s,l[0])});
+const seen={},dots=[];
+R.forEach((r,i)=>{const key=r[2]+"_"+r[3];seen[key]=(seen[key]||0)+1;const o=seen[key]-1;const cx=X(r[2])+o*32,cy=Y(r[3]);const g=el("g",{style:"cursor:pointer"},s);
+ dots.push(el("circle",{cx,cy,r:16,fill:C.ink,stroke:"#fff","stroke-width":2.5},g));const t=el("text",{x:cx,y:cy+5,"text-anchor":"middle","font-size":15,"pointer-events":"none"},g,i+1);t.style.fill="#fff";
+ g.onmouseenter=()=>pick(i);g.onclick=()=>pick(i)});
+const list=$("#riskList");R.forEach((r,i)=>{const b=document.createElement("button");b.innerHTML=`<b>${i+1}</b>${r[1]}`;b.onmouseenter=()=>pick(i);b.onclick=()=>pick(i);list.appendChild(b)});
+function pick(i){const r=R[i],l=r[2]*r[3];dots.forEach((d,k)=>{d.setAttribute("fill",k===i?C.blue:C.ink);d.setAttribute("r",k===i?20:16)});[...list.children].forEach((b,k)=>b.classList.toggle("on",k===i));
+ const lv=l>2?["високий рівень","#F8E0DA"]:l>=1?["середній рівень",C.y]:["низький рівень","#BFE3CD"];
+ $("#riskInfo").innerHTML=`<span class="lvl" style="background:${lv[1]}">${r[0]} · ${lv[0]}</span><h3>${i+1}. ${r[1]}</h3><p>${r[4]}</p>`}
+pick(0);})();
+
+/* ===== start ===== */
+let start=0;const m=(location.hash||"").match(/^#s(\d+)$/);if(m)start=Math.min(N,Math.max(1,+m[1]))-1;
+go(start);
+})();
+</script>
+</body></html>
